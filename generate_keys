@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+# Generate an RSA public/private key pair
+echo 'Encryption password:'
+read pword
+
+openssl genrsa -aes128 -passout pass:$pword -out id_rsa.pem 4096
+openssl rsa -in id_rsa.pem -passin pass:$pword -pubout -out id_rsa.pub.pem 
+

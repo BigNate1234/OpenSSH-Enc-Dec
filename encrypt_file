@@ -1,0 +1,48 @@
+#!/bin/zsh
+
+# Credit guide by Alexei Czeskis
+
+# Usage: encrypt_file <file> <public_key>
+# NOTE: Public key needs to be in the .pem format (see below)
+
+cd "${0%/*}"
+EXT="pem"
+
+#echo 'Which file to encrypt?'
+#read filename
+filename=$1
+
+#echo 'Which key to use?'
+#read pub_key
+pub_key=$2
+
+if [[ $# -lt 2 ]] ; then
+  echo "Usage: $ ./encrypt_file <file> <public_key>"
+  exit 1
+fi
+
+pub_key_ext="${pubkey##*.}"
+
+# Assuming their public key is in PEM format.
+# If not, have them run:
+# for you: $ openssl rsa -in id_rsa -pubout -outform pem > id_rsa.pub.pem
+# for them: $ openssl rsa -in id_rsa -outform pem > id_rsa.pem
+
+echo $pub_key_ext
+
+#if ! [[ $pub_key_ext =~ $EXT ]] ; then
+#  echo 'ERROR: Need public .pem file' >&2; exit 1
+#fi
+
+# Create random key
+openssl rand -base64 64 > key.bin
+
+# Encrypt key using public key
+openssl rsautl -encrypt -inkey $pub_key -pubin -in key.bin -out key.bin.enc
+
+# Encrypt file
+openssl enc -aes-256-cbc -salt -in $filename -out $filename.enc -pass file:./key.bin
+
+echo 'Files encrypted using public key'
+echo 'Please sign using your private key'
+echo 'Send all .enc files'

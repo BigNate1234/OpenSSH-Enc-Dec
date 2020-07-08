@@ -1,0 +1,39 @@
+#!/bin/zsh
+
+# Credit guide by Alexei Czeskis
+
+# Usage: decrypt_file <file> <private_key> <key>
+# NOTE: private key needs to be in the .pem format (see below)
+
+cd "${0%/*}"
+
+filename=$1
+pri_key=$2
+key=$3
+
+# Make sure there are three arguments for input
+if [[ $# -lt 3 ]] ; then
+  echo "Usage: $ ./decrypt_file <file.enc> <private_key> <key.bin.enc>"
+  exit 1
+fi
+
+echo 'Please verify signature before decrypting.'
+echo 'Hit enter to confirm or ^C to exit...'
+read tmp
+
+# Assuming their public key is in PEM format.
+# If not, have them run:
+# for them: $ openssl rsa -in id_rsa -pubout -outform pem > id_rsa.pub.pem
+# for you: $ openssl rsa -in id_rsa -outform pem > id_rsa.pem
+
+# Original filename (take out .enc)
+fname=$filename[0,-5]
+kname=$key[0,-5]
+
+# Decrypt key
+openssl rsautl -decrypt -inkey $pri_key -in $key -out $kname
+
+# Decrypt file
+openssl enc -d -aes-256-cbc -in $filename -out $fname -pass file:./$kname
+
+echo 'Files decrypted using private key and encoded key.'
